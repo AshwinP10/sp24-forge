@@ -13,7 +13,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['TEMP_FOLDER'] = 'temp'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
-app.config['GOOGLE_API_KEY'] = "AIzaSyAwMvQrbFrbke8IadCJC9cj0oJFkK_UiiM"
+app.config['GOOGLE_API_KEY'] = "ENTER HERE"
 
 # Initialize Gemini client
 client = genai.Client(api_key=app.config['GOOGLE_API_KEY'])
