@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracted Text - PDF Text Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            background-color: #2980b9;
+        }
+        .filename {
+            font-style: italic;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .text-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        .summary-container {
+            background-color: #e8f4f8;
+            border: 1px solid #b8daff;
+            border-radius: 5px;
+            padding: 20px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .btn {
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .copy-btn {
+            background-color: #2ecc71;
+        }
+        .copy-btn:hover {
+            background-color: #27ae60;
+        }
+        .tab-btn {
+            background-color: #95a5a6;
+        }
+        .tab-btn.active {
+            background-color: #3498db;
+        }
+        .copy-message {
+            display: none;
+            color: #2ecc71;
+            margin-left: 10px;
+        }
+        .paragraphs {
+            margin-bottom: 15px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PDF Text Extractor</h1>
+        <a href="{{ url_for('cleanup', text_id=text_id) }}" class="back-btn">Upload Another PDF</a>
+    </div>
+    
+    <div class="filename">
+        Source: {{ filename }}
+    </div>
+    
+    <div class="tabs">
+        <button class="btn tab-btn active" data-tab="summary">AI Summary</button>
+        <button class="btn tab-btn" data-tab="full-text">Full Text</button>
+    </div>
+    
+    <div id="summary-tab" class="tab-content active">
+        <h2>AI-Generated Summary</h2>
+        <div class="controls">
+            <button id="copy-summary-btn" class="btn copy-btn">Copy Summary</button>
+            <span id="copy-summary-message" class="copy-message">Summary copied!</span>
+        </div>
+        <div class="summary-container" id="summary-content">
+            {% if summary %}
+                {% for paragraph in summary.split('\n') %}
+                    {% if paragraph.strip() %}
+                        <div class="paragraphs">{{ paragraph }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>No summary available. The text might be too short or there was an error generating the summary.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div id="full-text-tab" class="tab-content">
+        <h2>Full Extracted Text</h2>
+        <div class="controls">
+            <button id="copy-text-btn" class="btn copy-btn">Copy Full Text</button>
+            <span id="copy-text-message" class="copy-message">Text copied!</span>
+        </div>
+        <div class="text-container" id="text-content">
+            {% for paragraph in text.split('\n\n') %}
+                {% if paragraph.strip() %}
+                    <div class="paragraphs">{{ paragraph }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <script>
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Update active tab button
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active tab content
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+        
+        // Copy functionality for summary
+        const copySummaryBtn = document.getElementById('copy-summary-btn');
+        const copySummaryMessage = document.getElementById('copy-summary-message');
+        
+        copySummaryBtn.addEventListener('click', function() {
+            const textarea = document.createElement('textarea');
+            textarea.value = `{{ summary|safe }}`;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            copySummaryMessage.style.display = 'inline';
+            setTimeout(function() {
+                copySummaryMessage.style.display = 'none';
+            }, 2000);
+        });
+        
+        // Copy functionality for full text
+        const copyTextBtn = document.getElementById('copy-text-btn');
+        const copyTextMessage = document.getElementById('copy-text-message');
+        
+        copyTextBtn.addEventListener('click', function() {
+            const textarea = document.createElement('textarea');
+            textarea.value = `{{ text|safe }}`;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            copyTextMessage.style.display = 'inline';
+            setTimeout(function() {
+                copyTextMessage.style.display = 'none';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
